@@ -1,6 +1,6 @@
 import test, { before, after } from 'node:test'
 import assert from 'node:assert/strict'
-import { mkdtemp, readFile, readdir, rm } from 'node:fs/promises'
+import { mkdtemp, readFile, readdir, rm, mkdir, writeFile } from 'node:fs/promises'
 import { resolve, sep, basename } from 'node:path'
 import { once } from 'node:events'
 import { createSyncServer } from './app.mjs'
@@ -10,7 +10,10 @@ let fixture, directory, base
 const password = 'fixture-password-123'
 before(async () => {
     directory = await mkdtemp(resolve('.cache/sync-test-'))
-    fixture = createSyncServer({ directory, allowedOrigins: ['https://keviince.github.io'], loginLimit: 100 })
+    const webRoot = resolve(directory, 'public')
+    await mkdir(webRoot)
+    await writeFile(resolve(webRoot, 'index.html'), '<html>fixture website</html>')
+    fixture = createSyncServer({ directory, webRoot, allowedOrigins: ['https://keviince.github.io'], loginLimit: 100 })
     fixture.server.listen(0, '127.0.0.1')
     await once(fixture.server, 'listening')
     base = `http://127.0.0.1:${fixture.server.address().port}`
@@ -211,6 +214,17 @@ test('credentials never go into a URL and insecure remote server addresses are r
     assert.throws(() => serverEndpoint('https://user:password@example.com'))
     assert.throws(() => serverEndpoint('https://example.com?token=secret'))
     assert.equal(serverEndpoint('https://example.com/'), 'https://example.com')
+})
+
+test('bundled pages allow the offline worker and cannot expose account files', async () => {
+    const page = await fetch(base + '/')
+    assert.equal(page.status, 200)
+    assert.equal(page.headers.get('Service-Worker-Allowed'), '/')
+    assert.match(await page.text(), /fixture website/)
+    assert.equal((await fetch(base + '/..%2Faccounts.json')).status, 404)
+    const apiResponse = await fetch(base + '/api/records')
+    assert.equal(apiResponse.status, 401)
+    assert.match(apiResponse.headers.get('Content-Type'), /application\/json/)
 })
 
 test('password reset revokes old sessions without deleting progress', async () => {

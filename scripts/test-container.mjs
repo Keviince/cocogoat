@@ -36,6 +36,7 @@ try {
     assert.equal((await api('/health')).protocol, 1)
     const page = await fetch(base + '/')
     assert.equal(page.status, 200)
+    assert.equal(page.headers.get('Service-Worker-Allowed'), '/')
     assert.match(await page.text(), /<html/)
     const login = await api('/auth/login', null, { account: 'container-test', password: 'container-fixture-password' })
     const saved = await fetch(base + '/api/records/profile', {

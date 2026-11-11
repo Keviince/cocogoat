@@ -39,6 +39,7 @@ export function createSyncServer({ directory, webRoot, allowedOrigins = [], logi
     const server = createServer(async (request, response) => {
         response.setHeader('X-Content-Type-Options', 'nosniff')
         response.setHeader('Referrer-Policy', 'no-referrer')
+        response.setHeader('Service-Worker-Allowed', '/')
         response.setHeader('Cache-Control', 'no-store')
         const send = (status, value) => {
             response.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8' })
