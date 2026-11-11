@@ -115,9 +115,6 @@ importers:
       vue-router:
         specifier: ^4.3.2
         version: 4.3.2(vue@3.4.25(typescript@5.4.5))
-      vue-scriptx:
-        specifier: ^0.2.5
-        version: 0.2.5
       vue-virtual-scroller:
         specifier: 2.0.0-alpha.1
         version: 2.0.0-alpha.1(patch_hash=d491de7a6549d3f24dccaa22f8c736fd2872db6e90f569744b3c45c068ecd883)(vue@3.4.25(typescript@5.4.5))

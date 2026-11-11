@@ -1,0 +1,12 @@
+.git
+**/.git
+node_modules
+dist
+.cache
+.codex
+.agents
+.env.local
+.env.*.local
+.env.selfhost
+server-data
+backups

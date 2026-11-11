@@ -18,7 +18,7 @@ Fork 的 `Update achievements and publish fork` 工作流每小时检查一次�
 
 Fork 默认可能关闭定时 Actions，需要在仓库 Actions 页面启用一次，并允许工作流写入仓库。GitHub Pages 的构建来源选 GitHub Actions；若已通过 API 配置，无需重复操作。以后不需要逐版本手动运行、填写版本或改发布日期。
 
-Release 包含 `cocogoat-local.html` 和 `cocogoat-web.tar.gz`。网站默认地址为 `https://<用户名>.github.io/<仓库名>/`，使用 hash 路由以支持项目子路径。原站点的个人数据同步接口和识别资源地址沿用现有配置。
+Release 包含 `cocogoat-local.html` 和 `cocogoat-web.tar.gz`。网站默认地址为 `https://<用户名>.github.io/<仓库名>/`，使用 hash 路由以支持项目子路径。个人数据同步已替换为自有服务器，部署见 [Docker Compose 说明](self-hosting.md)；识别资源地址沿用现有配置。
 
 本地更新：初始化子模块后执行 `pnpm update-data`，执行 `pnpm test:data` 检查同步逻辑。提交整个 `src/generated`（含子模块指针）即可。无需 ts-node 或 TARGET_VERSION。
 

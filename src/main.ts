@@ -8,7 +8,6 @@ import View from '@/views/View.vue'
 import { store, currentUser, options } from './store'
 import { initSync } from './store/sync'
 import { createPinia } from 'pinia'
-import ScriptX from 'vue-scriptx'
 import '@/utils/darkmode'
 import { i18n, initi18n } from '@/i18n'
 
@@ -20,7 +19,6 @@ import { loadSW } from '@/utils/serviceWorkerEntrance'
 
 const app = createApp(App)
 app.use(createPinia())
-app.use(ScriptX)
 
 // 兼容性检查：
 export let notInSameoriginFrame = parent === window
@@ -40,8 +38,6 @@ declare global {
         $cocogoat: CocogoatGlobal<TypeApp>
         dataLayer: unknown[]
         gtag: (...args: unknown[]) => void
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        initGeetest4: (...args: unknown[]) => any
     }
 }
 

@@ -23,6 +23,9 @@ pnpm-debug.log*
 *.sln
 *.sw?
 .cache
+.env.selfhost
+/server-data
+/backups
 
 src/generated/amos-data
 !src/generated/versionMeta.json

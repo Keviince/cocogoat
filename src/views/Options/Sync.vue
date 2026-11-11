@@ -1,233 +1,177 @@
 <template>
     <section :class="$style.syncManager">
-        <h4>云同步</h4>
-        <div class="desc">
-            在这里可以将您的账号与云同步。
-            <br />
-            如出现同步失败，一般是本地数据和云端数据出现了冲突，您可以选择：
-            <li>在下方点击手动同步，强制覆盖云端数据</li>
-            <li>在下方点击清除本地数据，页面刷新后会自动从云端同步</li>
-        </div>
-        <el-table ref="datatable" :data="syncProviders" class="account-table">
-            <el-table-column prop="id">
-                <template #header>
-                    <el-button @click="forceSyncAll(true)">手动同步</el-button>
-                </template>
-                <template #default="scope">
-                    <component
-                        :is="scope.row.provider.component"
-                        v-if="scope.row.provider.component"
-                        :provider="scope.row.provider"
-                    />
-                    <div v-else>
-                        {{ JSON.stringify(scope.row) }}
-                    </div>
-                </template>
-            </el-table-column>
-            <el-table-column width="120px">
-                <template #header>
-                    <el-button
-                        class="add-button"
-                        type="primary"
-                        plain
-                        style="float: right"
-                        @click="
-                            $router.replace({
-                                params: {
-                                    app: 'cocogoat',
-                                },
-                            })
-                        "
-                    >
-                        <fa-icon icon="plus" />
-                        &nbsp; 添加
-                    </el-button>
-                </template>
-                <template #default="scope">
-                    <div style="text-align: right">
-                        <el-button
-                            type="danger"
-                            style="width: 35px; margin-left: 2px"
-                            plain
-                            @click="delprovider(scope.row)"
-                        >
-                            <fa-icon icon="trash-can" />
-                        </el-button>
-                    </div>
-                </template>
-            </el-table-column>
-        </el-table>
-        <br />
-        <div v-if="syncStatus.errors.length > 0" class="failds">
-            <h4>同步状态</h4>
-            <br />
-            <el-table :data="syncStatus.errors" class="error-table">
-                <el-table-column prop="provider" label="同步服务"></el-table-column>
-                <el-table-column prop="provider" label="错误类型">
-                    <template #default="scope">
-                        {{ errtype[scope.row.code] || '其他错误' }}
-                    </template>
-                </el-table-column>
-                <el-table-column prop="provider" label="详细信息">
-                    <template #default="scope">
-                        {{ scope.row.message }}
-                    </template>
-                </el-table-column>
-            </el-table>
-        </div>
-        <h4>本地导出</h4>
-        <div class="desc">
-            导出的本地文件为 zip 格式，因此只需通过删除其中不想要的文件即可实现部分导入。<br />导入还没做好。
-            <p>
-                <el-button type="primary" plain :loading="exportLoading" @click="exportData">导出数据</el-button>
-                <el-button plain disabled>导入数据</el-button>
-                <el-button plain type="danger" @click="clearData">清除数据</el-button>
-            </p>
-        </div>
-
-        <el-drawer
-            :model-value="addType !== ''"
-            class="add-drawer"
-            title="添加同步账号"
-            :size="320"
-            :append-to-body="false"
-            :z-index="900"
-            destroy-on-close
-            :close-on-press-escape="false"
-            :close-on-click-modal="false"
-            @close="
-                $router.replace({
-                    params: {},
-                })
-            "
-        >
-            <div class="add-form">
-                <el-select
-                    :model-value="addType"
-                    size="large"
-                    style="width: 100%"
-                    @update:model-value="
-                        $router.replace({
-                            params: {
-                                app: $event,
-                            },
-                        })
-                    "
-                >
-                    <el-option
-                        v-for="i in providerInstallerList"
-                        :key="i.class"
-                        :value="i.class"
-                        :label="i.name"
-                    ></el-option>
-                </el-select>
-                <el-divider></el-divider>
-                <component :is="addComp" @submit="addSave($event as any)" />
+        <h3>我的服务器</h3>
+        <p>成就会先保存在本机，登录后自动同步到你自己的服务器。离线修改会在恢复连接后重试。</p>
+        <template v-if="syncConnection">
+            <div :class="$style.connection">
+                <strong>{{ syncConnection.account }}</strong>
+                <span>{{ syncConnection.endpoint }}</span>
+                <span>{{ statusText[syncStatus.status] }}</span>
             </div>
-        </el-drawer>
+            <div :class="$style.actions">
+                <el-button type="primary" :loading="busy" @click="runSync('normal')">立即同步</el-button>
+                <el-button :disabled="busy" @click="logout">退出登录</el-button>
+            </div>
+            <div v-if="hasConflict" :class="$style.conflict">
+                <p>本机和服务器都有未合并的修改。请先导出备份，再选择保留哪一份。</p>
+                <el-button :disabled="busy" @click="resolveConflict('upload')">冲突时保留本地数据</el-button>
+                <el-button :disabled="busy" @click="resolveConflict('download')">恢复服务器数据</el-button>
+            </div>
+        </template>
+        <el-form v-else label-position="top" :class="$style.login" @submit.prevent="login">
+            <el-form-item label="服务器地址">
+                <el-input v-model="endpoint" placeholder="https://achievements.example.com" autocomplete="url" />
+            </el-form-item>
+            <el-form-item label="UID 或账户名">
+                <el-input v-model="account" autocomplete="username" placeholder="服务器上创建的账号" />
+            </el-form-item>
+            <el-form-item label="密码">
+                <el-input v-model="password" type="password" autocomplete="current-password" show-password />
+            </el-form-item>
+            <p>登录后，本机现有成就会同步到该账号。已有数据发生冲突时，由你选择保留哪一份。</p>
+            <el-button
+                type="primary"
+                native-type="submit"
+                :loading="busy"
+                :disabled="!endpoint || !account || !password"
+                >登录并同步</el-button
+            >
+        </el-form>
+        <el-alert v-if="message" :title="message" type="error" :closable="false" show-icon />
+        <el-alert
+            v-for="error in syncStatus.errors"
+            :key="error.message"
+            :title="error.message"
+            type="warning"
+            :closable="false"
+            show-icon
+        />
+        <h3>本地备份</h3>
+        <p>退出登录和移除旧同步方式都不会删除本机成就。</p>
+        <el-button :loading="exportLoading" @click="exportData">导出全部本地数据</el-button>
+        <el-button type="danger" plain @click="clearData">清除本地数据</el-button>
     </section>
 </template>
 
 <script lang="ts">
-import { forceSyncAll, initSync, IProviderItem, syncProviders, syncStatus } from '@/store/sync'
-import { ref, computed, defineComponent, nextTick } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { computed, defineComponent, nextTick, ref } from 'vue'
+import { ElMessageBox } from 'element-plus'
+import { connectServer, disconnectServer, syncConnection, syncNow, syncStatus, SYNCSTAT } from '@/store/sync'
 import { list, get, del } from '@/store/impl'
 import { last } from '@/store/impl/localStorage'
-import dayjs from 'dayjs'
-import { ElMessageBox } from 'element-plus'
 import { disableAutoSave } from '@/store'
-import providerInstallerList from '@/store/syncInstaller'
-import { library } from '@fortawesome/fontawesome-svg-core'
-import { faPlus, faPenToSquare, faTrashCan } from '@fortawesome/free-solid-svg-icons'
-library.add(faPlus, faPenToSquare, faTrashCan)
+
 export default defineComponent({
     setup() {
-        const delprovider = (row: IProviderItem) => {
-            syncProviders.value.splice(syncProviders.value.indexOf(row), 1)
-            localStorage.removeItem('cocogoat.sync.v1.' + row.id)
-        }
-        const route = useRoute()
-        const router = useRouter()
-        const addType = computed(() => {
-            return (route.params.app || '').toString()
-        })
-        const addComp = computed(() => {
-            return providerInstallerList.find((i) => i.class === addType.value)?.component
-        })
-        const addSave = ({ key, data }: { key: string; data: unknown }) => {
-            const ckey = key
-                ? `${addType.value}_${key}`
-                : new Date().getTime().toString(16).split('').reverse().join('').substring(0, 8)
-            localStorage.setItem(
-                'cocogoat.sync.v1.' + ckey,
-                JSON.stringify({
-                    class: addType.value,
-                    data,
-                }),
-            )
-            router.replace({
-                params: {
-                    app: '',
-                },
-            })
-            initSync().then(() => forceSyncAll(false))
-        }
+        const endpoint = ref(
+            location.protocol.startsWith('http') && !location.hostname.endsWith('github.io') ? location.origin : '',
+        )
+        const account = ref('')
+        const password = ref('')
+        const busy = ref(false)
+        const message = ref('')
         const exportLoading = ref(false)
+        const hasConflict = computed(() => syncStatus.value.errors.some((error) => error.code === 'conflict'))
+        const statusText = {
+            [SYNCSTAT.OFFLINE]: '未连接',
+            [SYNCSTAT.WAITING]: '等待同步',
+            [SYNCSTAT.SYNCING]: '同步中',
+            [SYNCSTAT.SYNCED]: '已同步',
+            [SYNCSTAT.FAILED]: '同步未完成',
+            [SYNCSTAT.PARTIALLY]: '部分同步失败',
+        }
+        const login = async () => {
+            busy.value = true
+            message.value = ''
+            try {
+                await connectServer(endpoint.value.trim(), account.value.trim(), password.value)
+            } catch (error) {
+                message.value = error instanceof Error ? error.message : '登录失败'
+            } finally {
+                password.value = ''
+                busy.value = false
+            }
+        }
+        const runSync = async (mode = 'normal') => {
+            busy.value = true
+            try {
+                await syncNow(mode)
+            } finally {
+                busy.value = false
+            }
+        }
+        const logout = async () => {
+            await disconnectServer()
+        }
+        const resolveConflict = async (mode: string) => {
+            try {
+                await ElMessageBox.confirm(
+                    mode === 'upload'
+                        ? '将使用本机的冲突数据覆盖服务器版本，是否继续？'
+                        : '将使用服务器快照替换本机数据，未上传的本机修改将丢失，是否继续？',
+                    '确认数据来源',
+                    { type: 'warning', confirmButtonText: '继续', cancelButtonText: '取消' },
+                )
+            } catch {
+                return
+            }
+            await runSync(mode)
+        }
         const exportData = async () => {
             exportLoading.value = true
-            const Jszip = (await import('jszip')).default
-            const zip = new Jszip()
-            const keys = list().concat(['options', 'currentUser'])
-            keys.forEach((key) => {
-                const value = get(key)
-                const lastModified = last(key).toISOString()
-                zip.file(key + '.json', JSON.stringify({ value, lastModified }, null, 4))
-            })
-            const blob = await zip.generateAsync({ type: 'blob' })
-            const url = window.URL.createObjectURL(blob)
-            const a = document.createElement('a')
-            a.href = url
-            a.download = `cocogoat-export-${dayjs().format('YYMMDDHHmm')}.zip`
-            a.click()
-            exportLoading.value = false
+            try {
+                const JSZip = (await import('jszip')).default
+                const zip = new JSZip()
+                for (const key of list().concat(['options', 'currentUser'])) {
+                    zip.file(
+                        key + '.json',
+                        JSON.stringify({ value: get(key), lastModified: last(key).toISOString() }, null, 4),
+                    )
+                }
+                const url = URL.createObjectURL(await zip.generateAsync({ type: 'blob' }))
+                const link = document.createElement('a')
+                link.href = url
+                link.download = 'cocogoat-backup.zip'
+                link.click()
+                window.setTimeout(() => URL.revokeObjectURL(url), 10000)
+            } finally {
+                exportLoading.value = false
+            }
         }
         const clearData = async () => {
             try {
                 await ElMessageBox.confirm(
-                    '真的要清除本地数据吗？云端数据将依然保留，如需清理云端数据请通过删除账号方式操作。',
-                    '提示',
+                    '只清除本机数据，服务器数据会保留。未上传的修改将丢失，是否继续？',
+                    '确认清除',
+                    { type: 'warning' },
                 )
-            } catch (e) {
+            } catch {
                 return
             }
+            // Disconnect first so the next scan cannot turn a local cleanup into remote deletions.
+            await disconnectServer()
             disableAutoSave.value = true
             await nextTick()
-            const keys = list().concat(['options', 'currentUser'])
-            keys.forEach((key) => {
-                del(key, false)
-            })
+            for (const key of list().concat(['options', 'currentUser'])) del(key, false)
             location.reload()
         }
-        const errtype = {
-            conflict: '同步冲突',
-            offline: '网络错误',
-            auth: '登录失效',
-            disabled: '暂停服务',
-        } as Record<string, string>
         return {
-            syncProviders,
-            syncStatus,
-            providerInstallerList,
-            delprovider,
-            addType,
-            addSave,
-            addComp,
-            forceSyncAll,
-            clearData,
-            exportData,
+            endpoint,
+            account,
+            password,
+            busy,
+            message,
             exportLoading,
-            errtype,
+            syncConnection,
+            syncStatus,
+            statusText,
+            hasConflict,
+            login,
+            logout,
+            runSync,
+            resolveConflict,
+            exportData,
+            clearData,
         }
     },
 })
@@ -235,26 +179,33 @@ export default defineComponent({
 
 <style lang="scss" module>
 .sync-manager {
-    padding: 0 20px;
-    :global {
-        h4 {
-            margin: 10px 0;
-        }
-        .add-drawer {
-            padding-top: 50px;
-            .add-form {
-                margin-top: -20px;
-            }
-        }
-        .desc {
-            color: var(--c-text-mid);
-            padding: 10px;
-            margin-bottom: 10px;
-            font-size: 14px;
-            b {
-                color: darkred;
-            }
-        }
+    padding: 0 20px 30px;
+    color: var(--c-text);
+    p {
+        color: var(--c-text-mid);
+        font-size: 14px;
+        line-height: 1.7;
     }
+    :global(.el-alert) {
+        margin: 16px 0;
+        max-width: 650px;
+    }
+}
+.login {
+    max-width: 440px;
+}
+.connection {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin: 20px 0;
+}
+.actions {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 18px;
+}
+.conflict {
+    margin: 20px 0;
 }
 </style>

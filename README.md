@@ -1,4 +1,6 @@
 [English](README_en.md)
+
+本 fork 支持自有服务器：Docker Compose 部署、UID/账户名与密码登录、文件存储与多设备自动同步。见 [部署与备份说明](docs/self-hosting.md)；旧的第三方账号与 OneDrive 同步已移除。[成就数据自动更新说明](docs/automatic-achievements.md)。
 <div align="center">
 
 # 椰羊·卷土重来

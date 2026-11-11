@@ -59,6 +59,9 @@ export function speedTest() {
 
 const cacheName = 'cocogoat-sw'
 
+// Private account responses must bypass both page fallbacks and offline caches.
+registerRoute(({ url }) => url.pathname.startsWith('/api/'), new NetworkOnly())
+
 let speedTestResult = [] as Awaited<ReturnType<typeof speedTest>>
 
 addEventListener('install', (event: ExtendableEvent) => {
