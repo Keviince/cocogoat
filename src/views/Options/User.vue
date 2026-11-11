@@ -13,7 +13,7 @@
                     <span class="desc">点击头像切换用户</span>
                 </template>
                 <template #default="scope">
-                    <img class="table-avatar" :src="characterIcon(scope.row.avatar)" />
+                    <character-avatar class="table-avatar" :name="scope.row.avatar" />
                     <div class="user-name">{{ scope.row.name }}</div>
                     <div class="user-id">{{ scope.row.id }}</div>
                 </template>
@@ -63,7 +63,7 @@
                     <el-select v-model="edit.avatar" size="large" filterable :class="$style.avatarSel">
                         <template #prefix>
                             <div :class="$style.avatarSelPrefix">
-                                <img :src="characterIcon(edit.avatar)" />
+                                <character-avatar :name="edit.avatar" />
                             </div>
                         </template>
                         <el-option
@@ -73,7 +73,7 @@
                             :label="i18n.amos[i.name]"
                             :class="$style.userSelectorItem"
                         >
-                            <img :src="characterIcon(i.key)" />
+                            <character-avatar :name="i.key" />
                             <span class="sel-uname">{{ i18n.amos[i.name] }}</span>
                         </el-option>
                     </el-select>
@@ -85,18 +85,20 @@
 </template>
 
 <script lang="ts">
-import { allUsers, createEmptyStore, currentUser, reloadAllUsers } from '@/store'
+import { allUsers, createEmptyStore, currentUser, reloadAllUsers, store } from '@/store'
 import { i18n } from '@/i18n'
 import { ref, Ref, watch, defineComponent } from 'vue'
 import { ElMessageBox, ElTable } from 'element-plus'
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { faPlus, faPenToSquare, faTrashCan } from '@fortawesome/free-solid-svg-icons'
 import { del, get, set } from '@/store/impl'
-import { characterIcon } from '@/assets/mihoyoImages/characterIcon'
+import { resolveCharacterKey } from '@/assets/mihoyoImages/characterIcon'
+import CharacterAvatar from '@/components/CharacterAvatar.vue'
 import characterAmos from '@/generated/amos-data/amos/characters'
 library.add(faPlus, faPenToSquare, faTrashCan)
 type Unpacked<T> = T extends (infer U)[] ? U : T
 export default defineComponent({
+    components: { CharacterAvatar },
     setup() {
         const datatable = ref(null) as Ref<null | typeof ElTable>
         watch([datatable, currentUser], () => {
@@ -130,7 +132,7 @@ export default defineComponent({
                 edit: user.id,
                 id: user.id,
                 name: user.name,
-                avatar: user.avatar,
+                avatar: resolveCharacterKey(user.avatar),
             }
         }
         function saveForm() {
@@ -151,30 +153,29 @@ export default defineComponent({
                 // 新增
                 const emptyStore = createEmptyStore()
                 emptyStore.user.name = edit.value.name
-                emptyStore.user.avatar = edit.value.avatar
+                emptyStore.user.avatar = resolveCharacterKey(edit.value.avatar)
                 set(edit.value.id, emptyStore)
                 reloadAllUsers()
                 edit.value.show = false
                 return
             }
-            if (edit.value.edit !== edit.value.id) {
-                // 修改了UID
-                if (allUsers.value.find((e) => e.id === edit.value.id)) {
-                    ElMessageBox.alert('UID 重复', '出错了')
-                    return
-                }
-                const val = get(edit.value.edit)
-                del(edit.value.edit)
-                set(edit.value.id, val)
+            if (edit.value.edit !== edit.value.id && allUsers.value.some((user) => user.id === edit.value.id)) {
+                ElMessageBox.alert('UID 重复', '出错了')
+                return
             }
-            const val = get(edit.value.id)
-            val.user.name = edit.value.name
-            val.user.avatar = edit.value.avatar
-            set(edit.value.id, val)
+            const isCurrent = currentUser.value === edit.value.edit
+            const existing = isCurrent ? store.value : get(edit.value.edit) || createEmptyStore()
+            const value = {
+                ...existing,
+                user: { ...existing.user, name: edit.value.name, avatar: resolveCharacterKey(edit.value.avatar) },
+            }
+            set(edit.value.id, value)
+            if (edit.value.edit !== edit.value.id) del(edit.value.edit)
+            if (isCurrent) {
+                if (edit.value.id === currentUser.value) store.value.user = value.user
+                else currentUser.value = edit.value.id
+            }
             reloadAllUsers()
-            if (currentUser.value === edit.value.edit) {
-                currentUser.value = edit.value.id
-            }
             edit.value.show = false
         }
         async function delUser(user: Unpacked<typeof allUsers.value>) {
@@ -193,7 +194,6 @@ export default defineComponent({
             i18n,
             allUsers,
             currentUser,
-            characterIcon,
             datatable,
             handleCurrentChange,
             addUser,

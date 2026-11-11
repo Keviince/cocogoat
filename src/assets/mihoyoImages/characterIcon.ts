@@ -1,59 +1,6 @@
-import { underlineToCamelW } from '@/utils/caseConvert'
+import characters from '@/generated/amos-data/amos/characters/index'
 
-const list = [
-    'Albedo',
-    'Aloy',
-    'Ambor',
-    'Ayaka',
-    'Ayato',
-    'Barbara',
-    'Beidou',
-    'Bennett',
-    'Chongyun',
-    'Diluc',
-    'Diona',
-    'Eula',
-    'Feiyan',
-    'Fischl',
-    'Ganyu',
-    'Gorou',
-    'Hutao',
-    'Itto',
-    'Kaeya',
-    'Kazuha',
-    'Keqing',
-    'Klee',
-    'Kokomi',
-    'Lisa',
-    'Mona',
-    'Ningguang',
-    'Noel',
-    'Paimon',
-    'Qin',
-    'Qiqi',
-    'Razor',
-    'Rosaria',
-    'Sara',
-    'Sayu',
-    'Shenhe',
-    'Shougun',
-    'Sucrose',
-    'Tartaglia',
-    'Tohma',
-    'Venti',
-    'Xiangling',
-    'Xiao',
-    'Xingqiu',
-    'Xinyan',
-    'Yae',
-    'Yoimiya',
-    'Yunjin',
-    'Zhongli',
-    'PlayerGirl',
-    'PlayerBoy',
-    'Shinobu',
-    'Yelan',
-]
+const characterKeys = new Map([...characters.map(({ key }) => key), 'Paimon'].map((key) => [key.toLowerCase(), key]))
 const mapping = {
     traveler: 'PlayerGirl',
     raiden_shogun: 'Shougun',
@@ -65,16 +12,21 @@ const mapping = {
     yae_miko: 'Yae',
     kamisato_ayato: 'Ayato',
 } as Record<string, string>
-export const template =
-    'https://upload-bbs.mihoyo.com/game_record/genshin/character_icon/UI_AvatarIcon_#.png?x-oss-process=image/crop,w_200,h_200,y_5,g_north'
-export const characterIcon = (name: string) => {
-    let n = ''
-    if (mapping[name]) n = mapping[name]
-    else if (list.includes(underlineToCamelW(name))) n = underlineToCamelW(name)
-    else if (list.includes(underlineToCamelW(name.replace('_', '')))) n = underlineToCamelW(name.replace('_', ''))
-    else if (list.includes(underlineToCamelW(name.split('_')[1]))) n = underlineToCamelW(name.split('_')[1])
-    if (n === '') {
-        n = name
+export function resolveCharacterKey(name: string | null | undefined): string {
+    const value = (name || '').trim()
+    const alias = mapping[value.toLowerCase()]
+    if (alias) return alias
+    const candidates = [value, value.replace(/_/g, ''), value.split('_').pop() || '']
+    for (const candidate of candidates) {
+        const key = characterKeys.get(candidate.toLowerCase())
+        if (key) return key
     }
-    return template.replace('#', n)
+    return 'PlayerGirl'
 }
+
+export const template = 'https://upload-bbs.mihoyo.com/game_record/genshin/character_icon/UI_AvatarIcon_#.png'
+export const characterIcon = (name: string | null | undefined) => template.replace('#', resolveCharacterKey(name))
+export const characterIconSources = (name: string | null | undefined) => [
+    characterIcon(name),
+    `https://enka.network/ui/UI_AvatarIcon_${resolveCharacterKey(name)}.png`,
+]

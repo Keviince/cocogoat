@@ -18,7 +18,7 @@
         "lint": "vue-cli-service lint",
         "postinstall": "git submodule update --init --depth 1",
         "update-data": "node scripts/update-achievements.mjs --fetch",
-        "test:data": "node --test scripts/achievement-data.test.mjs scripts/release-dates.test.mjs"
+        "test:data": "node --test scripts/achievement-data.test.mjs scripts/release-dates.test.mjs scripts/avatar.test.mjs"
     },
     "dependencies": {
         "@fortawesome/fontawesome-svg-core": "^6.5.2",

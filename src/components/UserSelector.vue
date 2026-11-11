@@ -1,5 +1,5 @@
 <script lang="ts">
-import { defineComponent, computed, ref } from 'vue'
+import { defineComponent, ref } from 'vue'
 import { store, allUsers, currentUser } from '@/store'
 import { library } from '@fortawesome/fontawesome-svg-core'
 import {
@@ -13,9 +13,10 @@ import {
 } from '@fortawesome/free-solid-svg-icons'
 import { useRouter } from 'vue-router'
 import { syncStatus, SYNCSTAT } from '@/store/sync'
-import { characterIcon } from '@/assets/mihoyoImages/characterIcon'
+import CharacterAvatar from '@/components/CharacterAvatar.vue'
 library.add(faAngleDown, faCheck, faXmark, faEllipsis, faExclamation, faArrowsRotate, faLaptopCode)
 export default defineComponent({
+    components: { CharacterAvatar },
     props: {
         hideMore: {
             type: Boolean,
@@ -24,7 +25,6 @@ export default defineComponent({
     },
     setup() {
         const router = useRouter()
-        const avatar = computed(() => characterIcon(store.value.user.avatar))
         const onSelect = ([action, param]: [string, string | undefined]) => {
             switch (action) {
                 case 'switch':
@@ -59,7 +59,6 @@ export default defineComponent({
         const menuState = ref(false)
         return {
             store,
-            avatar,
             onSelect,
             allUsers,
             currentUser,
@@ -67,7 +66,6 @@ export default defineComponent({
             syncStatus,
             syncStatusText,
             syncIcon,
-            characterIcon,
         }
     },
 })
@@ -80,7 +78,7 @@ export default defineComponent({
                 :class="[$style.userInfo, $style.currentUser, syncStatus.status, menuState ? 'open' : '']"
                 class="cc-user-selector"
             >
-                <img :src="avatar" />
+                <character-avatar :name="store.user.avatar" />
                 <div :class="[$style.syncIcon, syncStatus.status, 'head-sync-icon']">
                     <fa-icon :icon="syncIcon[syncStatus.status]" />
                 </div>
@@ -101,7 +99,7 @@ export default defineComponent({
                         :class="[currentUser === i.id ? $style.selected : '']"
                     >
                         <div :class="[$style.userInfo, $style.listUser, currentUser === i.id ? 'selected' : '']">
-                            <img :src="characterIcon(i.avatar)" />
+                            <character-avatar :name="i.avatar" />
                             <span class="user-text">
                                 <span class="user-name">{{ i.name }}</span>
                                 <span class="user-id">{{ i.id }}</span>
