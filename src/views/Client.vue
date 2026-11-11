@@ -20,31 +20,11 @@
                     您可在控制面板或设置中随时卸载
                 </div>
             </div>
-            <div v-if="options.showads">
-                <div :class="$style.card" class="plz-card">
-                    <div ref="ad" class="ad module"></div>
-                    <div v-if="please" class="please">
-                        <div class="text">
-                            如果您希望支持我们，恳请您将本站加入广告屏蔽插件的白名单
-                            <br />
-                            我们承诺广告不会影响正常浏览，如不想看到此内容，可以在设置中关闭广告展示
-                        </div>
-                    </div>
-                    <Adsense
-                        data-ad-client="ca-pub-9385417627717996"
-                        data-ad-slot="9527722224"
-                        data-ad-format="horizontal"
-                        data-full-width-responsive="true"
-                    >
-                    </Adsense>
-                </div>
-            </div>
         </div>
     </Layout>
 </template>
 <script lang="ts">
-import { options } from '@/store'
-import { defineComponent, onMounted, ref, watch } from 'vue'
+import { defineComponent, onMounted } from 'vue'
 import DlUpdate from '@/utils/dlUpdate'
 const latest = new DlUpdate('frostflake')
 export default defineComponent({
@@ -59,26 +39,10 @@ export default defineComponent({
             iframe.src = latest.url.value
             document.body.appendChild(iframe)
         })
-        const ad = ref(null as HTMLElement | null)
-        const please = ref(false)
-        watch(
-            () => ad.value,
-            () => {
-                if (ad.value) {
-                    const len = ad.value.getClientRects().length
-                    if (len <= 0) {
-                        please.value = true
-                    }
-                }
-            },
-        )
         return {
             url: latest.url,
             version: latest.version,
             size: latest.formattedSize,
-            options,
-            please,
-            ad,
         }
     },
 })
@@ -90,7 +54,6 @@ export default defineComponent({
     display: flex;
     align-items: center;
     justify-content: center;
-    padding-bottom: 200px;
     box-sizing: border-box;
     :global {
         .center {

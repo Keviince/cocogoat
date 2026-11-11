@@ -33,7 +33,7 @@ jobs:
               with:
                   node-version: 22
             - name: Test synchronization logic
-              run: node --test scripts/achievement-data.test.mjs
+              run: node --test scripts/achievement-data.test.mjs scripts/release-dates.test.mjs
             - name: Synchronize formal release data
               id: sync
               run: node scripts/update-achievements.mjs --fetch

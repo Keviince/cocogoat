@@ -18,7 +18,7 @@
         "lint": "vue-cli-service lint",
         "postinstall": "git submodule update --init --depth 1",
         "update-data": "node scripts/update-achievements.mjs --fetch",
-        "test:data": "node --test scripts/achievement-data.test.mjs"
+        "test:data": "node --test scripts/achievement-data.test.mjs scripts/release-dates.test.mjs"
     },
     "dependencies": {
         "@fortawesome/fontawesome-svg-core": "^6.5.2",
@@ -51,8 +51,6 @@
         "util": "^0.12.5",
         "vue": "^3.4.25",
         "vue-demi": "^0.14.7",
-        "vue-google-adsense": "^2.0.0",
-        "vue-monaco": "^1.2.2",
         "vue-router": "^4.3.2",
         "vue-scriptx": "^0.2.5",
         "vue-virtual-scroller": "2.0.0-alpha.1",

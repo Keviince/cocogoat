@@ -1,6 +1,6 @@
 import { uniq } from 'lodash-es'
 import versionMeta from '@/generated/versionMeta.json'
-import versionObserved from '@/generated/versionObserved.json'
+import versionRelease from '@/generated/versionRelease.json'
 
 const versionMap = Object.entries(versionMeta).reduce(
     (prev, curr) => {
@@ -48,10 +48,10 @@ export const versionDateMap = {
     2.7: new Date('2022-05-31'),
     2.6: new Date('2022-03-30'),
 } as Record<number, Date>
-// New formal upstream releases become visible when their data is available.
-// These are observation times, not a prediction of the game's launch schedule.
-for (const [version, observedAt] of Object.entries(versionObserved)) {
-    if (!versionDateMap[Number(version)]) versionDateMap[Number(version)] = new Date(observedAt as string)
+// Archived official maintenance notices take precedence over legacy date entries.
+// The expected maintenance end is not a measurement of the actual server opening.
+for (const [version, release] of Object.entries(versionRelease)) {
+    versionDateMap[Number(version)] = new Date((release as { expectedReleaseAt: string }).expectedReleaseAt)
 }
 export default versionMap
 export const allVersions = uniq(Object.values(versionMap)).sort((a, b) => b - a)

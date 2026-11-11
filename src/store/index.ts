@@ -26,7 +26,6 @@ export function createEmptyOptions() {
         achievements_recent_export: 'excel',
         achievements_show_unpublished: false,
         reporting: true,
-        showads: true,
     }
 }
 export type IOptions = ReturnType<typeof createEmptyOptions>

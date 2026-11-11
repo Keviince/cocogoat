@@ -1,0 +1,9 @@
+{
+    "7.2": {
+        "maintenanceStart": "2026-11-03T22:00:00.000Z",
+        "expectedReleaseAt": "2026-11-04T03:00:00.000Z",
+        "announcementId": 22015,
+        "title": "「坏灭肇始之时」7.2版本更新说明",
+        "source": "https://hk4e-api.mihoyo.com/common/hk4e_cn/announcement/api/getAnnContent?game=hk4e&game_biz=hk4e_cn&lang=zh-cn&bundle_id=hk4e_cn&platform=pc&region=cn_gf01&level=55&uid=100000000"
+    }
+}

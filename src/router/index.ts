@@ -8,22 +8,11 @@ const routes: Array<RouteRecordRaw> = [
         children: [
             {
                 path: '',
-                name: 'home',
-                component: () => import('@/views/Home.vue'),
+                redirect: { name: 'achievement.index' },
             },
         ],
     },
-    {
-        path: '/artifact',
-        component: () => import('@/views/Layout.vue'),
-        children: [
-            {
-                path: '',
-                name: 'artifact.index',
-                component: () => import('@/views/Artifact/Index.vue'),
-            },
-        ],
-    },
+
     {
         path: '/achievement',
         component: () => import('@/views/Layout.vue'),
@@ -40,22 +29,7 @@ const routes: Array<RouteRecordRaw> = [
             },
         ],
     },
-    {
-        path: '/extra/installer',
-        component: () => import('@/views/Layout.vue'),
-        children: [
-            {
-                path: '',
-                name: 'installer.index',
-                component: () => import('@/views/Installer/HYP.vue'),
-            },
-            {
-                path: '',
-                name: 'installer.legacy',
-                component: () => import('@/views/Installer/Index.vue'),
-            },
-        ],
-    },
+
     {
         path: '/options',
         component: () => import('@/views/Layout.vue'),
@@ -121,44 +95,7 @@ const routes: Array<RouteRecordRaw> = [
             },
         ],
     },
-    {
-        path: '/frames/artifact-scanner',
-        component: () => import('@/views/ArtifactScanner/Index.vue'),
-        children: [
-            {
-                path: '',
-                name: 'frames.artifact.scan',
-                component: () => import('@/views/ArtifactScanner/Entrance.vue'),
-            },
-            {
-                path: 'capture',
-                name: 'frames.artifact.scan.capture-scanner',
-                component: () => import('@/views/ArtifactScanner/CaptureScanner/Index.vue'),
-            },
-            {
-                path: 'screenshot',
-                name: 'frames.artifact.scan.screenshot-scanner',
-                component: () => import('@/views/ArtifactScanner/ScreenshotScanner/Index.vue'),
-            },
-        ],
-    },
-    {
-        path: '/frames/playground',
-        name: 'frames.playground',
-        component: () => import('@/views/Playground/Index.vue'),
-    },
-    {
-        path: '/extra/playground',
-        component: () => import('@/views/Layout.vue'),
-        children: [
-            {
-                path: '',
-                name: 'extra.playground',
-                component: () => import('@/views/Playground/Frame.vue'),
-            },
-        ],
-    },
-    /* Tools */
+
     {
         path: '/extra/achievement-to-seelie',
         redirect: '/achievement/scan-and-export?to=seelie',
@@ -178,17 +115,8 @@ const routes: Array<RouteRecordRaw> = [
             },
         ],
     },
-    {
-        path: '/zhiqiong',
-        component: () => import('@/views/Layout.vue'),
-        children: [
-            {
-                path: '',
-                name: 'zhiqiong',
-                component: () => import('@/views/Zhiqiong.vue'),
-            },
-        ],
-    },
+
+    { path: '/:pathMatch(.*)*', redirect: { name: 'achievement.index' } },
 ]
 
 const router = createRouter({

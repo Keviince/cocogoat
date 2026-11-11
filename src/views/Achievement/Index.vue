@@ -97,18 +97,15 @@
                     class="progress-in"
                     :style="{
                         width:
-                            ((achievementFinStat[currentCat.id || 0]?.count || 0) / currentCat.achievements.length) *
+                            ((currentCat.key === 'all'
+                                ? totalFin.count
+                                : achievementFinStat[currentCat.id || 0]?.count || 0) /
+                                (currentCat.achievements.length || 1)) *
                                 100 +
                             '%',
                     }"
                 ></div>
             </div>
-            <achievement-sidebar
-                :totalFin="totalFin"
-                :achievementCat="allAchievementCat"
-                :achievementFinStat="achievementFinStat"
-                :hideFinished="hideFinished"
-            />
             <article>
                 <DynamicScroller
                     ref="scroll"
@@ -122,6 +119,26 @@
                     <template #before>
                         <div class="page-before">
                             <div class="left">
+                                <el-select
+                                    v-model="currentCatId"
+                                    class="category-select"
+                                    filterable
+                                    aria-label="成就分类"
+                                >
+                                    <el-option
+                                        v-for="category in allAchievementCat"
+                                        :key="category.key"
+                                        :value="category.key"
+                                        :label="category.key === 'all' ? '所有成就' : amos[category.name]"
+                                    >
+                                        {{ category.key === 'all' ? '所有成就' : amos[category.name] }}
+                                        ({{
+                                            category.key === 'all'
+                                                ? totalFin.count
+                                                : achievementFinStat[category.id]?.count || 0
+                                        }}/{{ category.achievements.length }})
+                                    </el-option>
+                                </el-select>
                                 <el-select
                                     v-model="statusVersion"
                                     class="status-version"
@@ -260,6 +277,7 @@
 import '@/styles/actions.scss'
 import { useRoute, useRouter } from 'vue-router'
 import { ref, toRef, defineComponent, computed, watch } from 'vue'
+import { useNow } from '@vueuse/core'
 import achevementsAmos from '@/generated/amos-data/amos/achievements/index'
 import achPartialAmos from '@/generated/amos-data/amos/achievements/partial'
 import { goalMap } from '@/views/Achievement/goalMap'
@@ -288,7 +306,6 @@ import { DynamicScroller, DynamicScrollerItem } from 'vue-virtual-scroller/src/i
 import { useContributedAchievements } from './useContributedAchievements'
 
 import AchievementItemComp from './AchivementItem.vue'
-import AchievementSidebar from './AchievementSidebar.vue'
 import AchievementDetail from './AchievementDetail.vue'
 import ExportDropdown from './ExportDropdown.vue'
 import ImportDialog from './ImportDialog.vue'
@@ -306,7 +323,6 @@ export default defineComponent({
     components: {
         IconCocogoat,
         AchievementItem: AchievementItemComp,
-        AchievementSidebar,
         AchievementDetail,
         ImportDialog,
         ExportDropdown,
@@ -379,20 +395,21 @@ export default defineComponent({
                 { count: 0, reward: 0 },
             )
         })
-        const nowDate = new Date()
+        const nowDate = useNow({ interval: 60000 })
 
         const publishedInfo = computed(() => {
-            let latestPublishedVersion = 999
+            let latestPublishedVersion = 0
             let hasUnpublishedVersion = process.env.NODE_ENV !== 'production'
             for (const version of Object.keys(versionDateMap).sort((a, b) => Number(b) - Number(a))) {
                 const date = versionDateMap[Number(version)]
-                if (date <= nowDate) {
+                if (date <= nowDate.value) {
                     latestPublishedVersion = Number(version)
                     break
                 } else {
                     hasUnpublishedVersion = true
                 }
             }
+            hasUnpublishedVersion ||= allVersions.some((version) => version > latestPublishedVersion)
             if (options.value.achievements_show_unpublished) {
                 latestPublishedVersion = 999
             }
@@ -455,12 +472,15 @@ export default defineComponent({
         const route = useRoute()
         const DEFAULTCAT = 'wonders-of-the-world'
         const ALLCAT = 'all'
-        const currentCatId = computed(() => {
-            return route.params.cat || DEFAULTCAT
+        const currentCatId = computed({
+            get: () => (route.params.cat as string) || ALLCAT,
+            set: (cat: string) => {
+                router.replace({ name: 'achievement.index', params: { cat }, query: route.query })
+            },
         })
         const currentCat = computed(() => {
             const v: AchievementCategory =
-                allAchievementCat.value.find((i) => i.key === currentCatId.value) || achievementCat.value[0]
+                allAchievementCat.value.find((i) => i.key === currentCatId.value) || allAchievementCat.value[0]
             const q = {} as Record<number, string>
             v.achievements.forEach((e) => {
                 if (e.trigger.task && e.trigger.task.length > 0) {
@@ -857,9 +877,10 @@ export default defineComponent({
     }
 }
 :global(.m) .total-percent {
-    position: absolute;
-    top: 20px;
-    right: 55px;
+    font-size: 12px;
+    :global(.reward) {
+        display: none;
+    }
 }
 .import-dialog {
     width: 500px !important;
@@ -873,7 +894,7 @@ export default defineComponent({
             height: 3px;
             position: absolute;
             top: 0;
-            left: 235px;
+            left: 0;
             right: 0;
             z-index: 99;
             .progress-in {
@@ -883,23 +904,29 @@ export default defineComponent({
             }
         }
         article {
-            left: 235px;
+            left: 0;
             position: absolute;
             top: 0;
             bottom: 0;
             right: 0;
             .page-before {
                 display: flex;
+                flex-wrap: wrap;
+                gap: 12px;
                 padding-top: 15px;
                 .right {
                     flex-grow: 1;
+                    min-width: 220px;
                 }
 
                 .left {
                     display: flex;
+                    flex-wrap: wrap;
+                    align-items: center;
+                    gap: 8px;
                     flex: 4;
                     .chk {
-                        padding: 0 15px;
+                        padding: 0 5px;
                         height: 32px;
                         .el-checkbox {
                             height: 32px;
@@ -916,6 +943,11 @@ export default defineComponent({
                             flex: 2;
                         }
                         flex: 3;
+                        &.category-select {
+                            min-width: 220px;
+                            width: 260px;
+                            max-width: 320px;
+                        }
                         .el-tag.is-closable {
                             padding-left: 5px;
                         }
@@ -997,7 +1029,7 @@ export default defineComponent({
             }
         }
         article {
-            top: 65px;
+            top: 0;
             left: 0;
         }
 

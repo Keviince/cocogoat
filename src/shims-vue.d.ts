@@ -19,9 +19,7 @@ declare module '*?raw&dictcompress'
 declare module '*?url&nolocal'
 declare module '*?url&gzip'
 
-declare module 'vue-monaco'
 
-declare module 'vue-google-adsense/dist/Adsense.min.js'
 
 declare module '@/../resources.json' {
     import { IResourceItem } from './resources'

@@ -11,7 +11,6 @@ import { createPinia } from 'pinia'
 import ScriptX from 'vue-scriptx'
 import '@/utils/darkmode'
 import { i18n, initi18n } from '@/i18n'
-import Adsense from 'vue-google-adsense/dist/Adsense.min.js'
 
 import type { CocogoatGlobal } from '@/typings/global'
 
@@ -22,7 +21,6 @@ import { loadSW } from '@/utils/serviceWorkerEntrance'
 const app = createApp(App)
 app.use(createPinia())
 app.use(ScriptX)
-app.use(Adsense)
 
 // 兼容性检查：
 export let notInSameoriginFrame = parent === window

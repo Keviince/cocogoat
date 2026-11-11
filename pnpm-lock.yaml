@@ -112,12 +112,6 @@ importers:
       vue-demi:
         specifier: ^0.14.7
         version: 0.14.7(vue@3.4.25(typescript@5.4.5))
-      vue-google-adsense:
-        specifier: ^2.0.0
-        version: 2.0.0(vue-scriptx@0.2.5)(vue@3.4.25(typescript@5.4.5))
-      vue-monaco:
-        specifier: ^1.2.2
-        version: 1.2.2
       vue-router:
         specifier: ^4.3.2
         version: 4.3.2(vue@3.4.25(typescript@5.4.5))

@@ -43,7 +43,7 @@ export default defineComponent({
 </script>
 <style lang="scss" module>
 .component-header {
-    height: 50px;
+    height: 56px;
     width: 100%;
     max-width: 100vw;
     overflow: hidden;
@@ -52,8 +52,8 @@ export default defineComponent({
     right: 0;
     z-index: 999;
     .app-title {
-        padding-left: 100px;
-        line-height: 50px;
+        padding-left: 20px;
+        line-height: 56px;
         font-size: 20px;
         user-select: none;
         cursor: default;
@@ -68,8 +68,7 @@ export default defineComponent({
 }
 .layout {
     min-height: 100vh;
-    padding-top: 50px;
-    padding-left: 80px;
+    padding-top: 56px;
     box-sizing: border-box;
     .component-main {
         height: 100%;
@@ -79,11 +78,10 @@ export default defineComponent({
 :global(.m) {
     .layout {
         box-sizing: border-box;
-        padding-bottom: 55px;
         padding-left: 0;
         transition: padding 0.2s;
         &.open {
-            padding-top: 100px;
+            padding-top: 106px;
         }
         .component-header {
             height: 0;
@@ -93,9 +91,9 @@ export default defineComponent({
     .app-title {
         position: fixed;
         top: 0;
-        left: 58px;
+        left: 16px;
         z-index: 999;
-        right: 0;
+        right: 145px;
         padding: 0;
     }
 
@@ -104,7 +102,7 @@ export default defineComponent({
         position: fixed;
         top: 0px;
         &.open {
-            top: 50px;
+            top: 56px;
         }
         right: 0;
         left: 0;
@@ -125,8 +123,8 @@ export default defineComponent({
     }
     .btn-actions {
         position: fixed;
-        right: 0;
-        top: 0;
+        right: 100px;
+        top: 3px;
         width: 45px;
         height: 50px;
         border: 0;
@@ -148,8 +146,8 @@ export default defineComponent({
         height: 100%;
         position: absolute;
         top: 0;
-        right: 150px;
-        line-height: 48px;
+        right: 245px;
+        line-height: 54px;
         vertical-align: middle;
         :global {
             .a-line {
