@@ -791,6 +791,7 @@ export default defineComponent({
             achievementCat,
             allAchievementCat,
             currentCatId,
+            amos: toRef(i18n, 'amos'),
             currentCat,
             achievementFin,
             achievementFinStat,

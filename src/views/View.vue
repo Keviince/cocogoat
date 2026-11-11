@@ -9,6 +9,7 @@
                 v-if="isMobile && $slots.actions"
                 :class="[$style.btnActions, $style.boxActions, actionsOpen ? $style.open : '']"
                 plain
+                aria-label="成就操作"
                 @click="actionsOpen = !actionsOpen"
             >
                 <fa-icon icon="ellipsis-vertical" />

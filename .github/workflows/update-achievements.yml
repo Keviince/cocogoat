@@ -63,6 +63,9 @@ jobs:
             - name: Install locked dependencies
               if: steps.publish.outputs.enabled == 'true'
               run: pnpm install --frozen-lockfile
+            - name: Check application types
+              if: steps.publish.outputs.enabled == 'true'
+              run: pnpm exec vue-tsc --noEmit
             - name: Build website for GitHub Pages
               if: steps.publish.outputs.enabled == 'true'
               env:
