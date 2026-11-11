@@ -19,6 +19,8 @@
 }
 .cc-settings {
     display: inline-flex;
+    flex-shrink: 0;
+    white-space: nowrap;
     align-items: center;
     gap: 7px;
     padding: 9px;
