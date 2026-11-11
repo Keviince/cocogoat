@@ -266,6 +266,9 @@ importers:
       vite-plugin-singlefile:
         specifier: ^2.0.1
         version: 2.0.1(rollup@4.16.4)(vite@5.2.10(@types/node@22.10.2)(sass@1.75.0)(terser@5.30.4))
+      vue-eslint-parser:
+        specifier: 9.4.2
+        version: 9.4.2(eslint@8.57.0)
       vue-tsc:
         specifier: ^1.8.27
         version: 1.8.27(typescript@5.4.5)

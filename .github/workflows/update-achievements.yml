@@ -1,0 +1,108 @@
+name: Update achievements and publish fork
+
+on:
+    schedule:
+        - cron: '17 * * * *'
+    workflow_dispatch:
+    push:
+        branches: [main]
+
+concurrency:
+    group: achievement-publication
+    cancel-in-progress: false
+
+permissions:
+    contents: write
+    pages: write
+    id-token: write
+
+jobs:
+    update:
+        if: github.repository != 'YuehaiTeam/cocogoat'
+        runs-on: ubuntu-latest
+        timeout-minutes: 40
+        outputs:
+            publish: ${{ steps.publish.outputs.enabled }}
+        steps:
+            - uses: actions/checkout@v4
+              with:
+                  ref: main
+                  fetch-depth: 0
+                  submodules: recursive
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: 22
+            - name: Test synchronization logic
+              run: node --test scripts/achievement-data.test.mjs
+            - name: Synchronize formal release data
+              id: sync
+              run: node scripts/update-achievements.mjs --fetch
+            - name: Decide whether to build
+              id: publish
+              env:
+                  EVENT: ${{ github.event_name }}
+                  CHANGED: ${{ steps.sync.outputs.changed }}
+                  GH_TOKEN: ${{ github.token }}
+                  GH_REPO: ${{ github.repository }}
+              run: |
+                  previous=$(gh api "repos/${GH_REPO}/actions/workflows/update-achievements.yml/runs?status=completed&per_page=1" --jq '.workflow_runs[0].conclusion // "none"')
+                  if [[ "$EVENT" != schedule || "$CHANGED" == true || "$previous" != success ]]; then
+                    echo "enabled=true" >> "$GITHUB_OUTPUT"
+                  fi
+            # Commit locally before installation so postinstall uses the new pinned data.
+            # Push only after BOTH builds succeed. No second workflow trigger is needed.
+            - name: Record synchronized data locally
+              if: steps.sync.outputs.changed == 'true'
+              run: |
+                  git config user.name 'github-actions[bot]'
+                  git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+                  git add src/generated
+                  git commit -m 'chore: synchronize achievement data'
+            - uses: pnpm/action-setup@v4
+              if: steps.publish.outputs.enabled == 'true'
+            - name: Install locked dependencies
+              if: steps.publish.outputs.enabled == 'true'
+              run: pnpm install --frozen-lockfile
+            - name: Build website for GitHub Pages
+              if: steps.publish.outputs.enabled == 'true'
+              env:
+                  FORK_DEPLOY: 'true'
+                  VUE_APP_PUBLIC_PATH: /${{ github.event.repository.name }}/
+              run: |
+                  pnpm build
+                  cp dist/index.html dist/404.html
+                  mv dist site
+                  tar -czf cocogoat-web.tar.gz -C site .
+            - name: Build standalone HTML
+              if: steps.publish.outputs.enabled == 'true'
+              run: |
+                  pnpm build:singlefile
+                  cp dist/index.html cocogoat-local.html
+            - name: Push validated data
+              if: steps.sync.outputs.changed == 'true'
+              run: git push origin HEAD:main
+            - name: Publish downloadable builds
+              if: steps.publish.outputs.enabled == 'true'
+              env:
+                  GH_TOKEN: ${{ github.token }}
+                  GH_REPO: ${{ github.repository }}
+                  DATA_VERSION: ${{ steps.sync.outputs.version }}
+              run: |
+                  tag="data-${DATA_VERSION}-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+                  gh release create "$tag" cocogoat-local.html cocogoat-web.tar.gz \
+                    --target "$(git rev-parse HEAD)" --title "成就数据 ${DATA_VERSION}" \
+                    --notes '自动同步正式版上游数据，校验并构建。网页包适用于本 fork 的 GitHub Pages 路径。' --latest
+            - uses: actions/upload-pages-artifact@v3
+              if: steps.publish.outputs.enabled == 'true'
+              with:
+                  path: site
+    deploy:
+        needs: update
+        if: needs.update.outputs.publish == 'true'
+        runs-on: ubuntu-latest
+        environment:
+            name: github-pages
+            url: ${{ steps.deployment.outputs.page_url }}
+        steps:
+            - uses: actions/deploy-pages@v4
+              id: deployment

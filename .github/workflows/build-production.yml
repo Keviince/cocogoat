@@ -5,6 +5,7 @@ on:
       - main
 jobs:
   build:
+    if: github.repository == 'YuehaiTeam/cocogoat'
     env:
       BUILD_TYPE: REL
       SENTRY_URL: ${{ secrets.SENTRY_URL }}

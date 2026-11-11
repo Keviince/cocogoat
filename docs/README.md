@@ -10,7 +10,7 @@
 记得加上 `allow="display-capture"` 以允许抓屏。
 
 ### 数据源
-所有的成就数据均来自 <https://github.com/dvaJi/genshin-data>。目前已知此处的成就 ID 和 `SEELIE.me` 及 `Paimon.moe` 完全一致。
+成就目录和文本来自 <https://github.com/YuehaiTeam/amos-data>，通过 Git 子模块锁定。Fork 的自动同步和发布流程见 [自动更新成就](./automatic-achievements.md)。
 
 ### 交互
 扫描器可以通过 `iframe` 和上层应用交互，单个消息的格式如下：

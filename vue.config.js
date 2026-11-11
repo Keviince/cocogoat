@@ -31,7 +31,7 @@ const useSWC = isCI
 const useSentry = false
 // !process.argv.includes('--no-sentry') && process.env.NODE_ENV === 'production' && !!process.env.SENTRY_KEY
 process.env.VUE_APP_BUILD = require('dayjs')().format('YYMMDDHHmm')
-process.env.VUE_APP_ROUTER_HASH = singleFile ? 'true' : 'false'
+process.env.VUE_APP_ROUTER_HASH = singleFile || process.env.FORK_DEPLOY === 'true' ? 'true' : 'false'
 process.env.VUE_APP_SINGLEFILE = singleFile ? 'true' : 'false'
 process.env.VUE_APP_LOCALRES = singleFile || process.env.NODE_ENV === 'development' ? 'true' : 'false'
 process.env.VUE_APP_TIMESTAMP = Date.now()
@@ -67,7 +67,10 @@ if (usePreJS) {
 }
 
 module.exports = defineConfig({
-    publicPath: singleFile ? '.' : process.env.NODE_ENV === 'production' && useCDN ? 'https://gi.cocogoat.cn/' : '/',
+    publicPath: singleFile
+        ? '.'
+        : process.env.VUE_APP_PUBLIC_PATH ||
+          (process.env.NODE_ENV === 'production' && useCDN ? 'https://gi.cocogoat.cn/' : '/'),
     assetsDir: 'static',
     transpileDependencies: true,
     productionSourceMap: true,
