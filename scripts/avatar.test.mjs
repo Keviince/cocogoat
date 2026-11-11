@@ -11,7 +11,7 @@ const compiled = ts
         '@/generated/amos-data/amos/characters/index',
         new URL('../src/generated/amos-data/amos/characters/index.js', import.meta.url).href,
     )
-const { resolveCharacterKey, characterIconSources } = await import(
+const { resolveCharacterKey, characterIconSources, isUnavailableAvatar } = await import(
     'data:text/javascript;base64,' + Buffer.from(compiled).toString('base64')
 )
 
@@ -33,4 +33,24 @@ test('backup image uses an independent host for the same character', () => {
     const sources = characterIconSources('furina')
     assert.notEqual(new URL(sources[0]).host, new URL(sources[1]).host)
     for (const url of sources) assert.equal(new URL(url).pathname.split('/').pop(), 'UI_AvatarIcon_Furina.png')
+})
+test('the HTTP 200 unavailable-image graphic is rejected without rejecting real portraits', () => {
+    assert.equal(
+        isUnavailableAvatar(
+            'https://upload-bbs.mihoyo.com/game_record/genshin/character_icon/UI_AvatarIcon_Furina.png',
+            1200,
+            1200,
+        ),
+        true,
+    )
+    assert.equal(
+        isUnavailableAvatar(
+            'https://upload-bbs.mihoyo.com/game_record/genshin/character_icon/UI_AvatarIcon_PlayerGirl.png',
+            256,
+            256,
+        ),
+        false,
+    )
+    assert.equal(isUnavailableAvatar('https://enka.network/ui/UI_AvatarIcon_Furina.png', 1200, 1200), false)
+    assert.equal(new URL(characterIconSources('Furina')[0]).host, 'enka.network')
 })

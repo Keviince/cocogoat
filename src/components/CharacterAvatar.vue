@@ -5,14 +5,14 @@
         :alt="alt"
         referrerpolicy="no-referrer"
         decoding="async"
-        @load="loaded = true"
+        @load="onLoad"
         @error="nextSource"
     />
 </template>
 
 <script lang="ts">
 import { computed, defineComponent, ref, watch } from 'vue'
-import { characterIconSources, resolveCharacterKey } from '@/assets/mihoyoImages/characterIcon'
+import { characterIconSources, resolveCharacterKey, isUnavailableAvatar } from '@/assets/mihoyoImages/characterIcon'
 
 // Embedded so a CDN outage or offline use still has a visible avatar.
 const placeholder =
@@ -39,8 +39,15 @@ export default defineComponent({
             },
             { flush: 'sync' },
         )
-        const nextSource = () => {
+        const nextSource = (event?: Event) => {
+            if (event && (event.currentTarget as HTMLImageElement).getAttribute('src') !== source.value) return
             if (index.value < sources.value.length) index.value++
+        }
+        const onLoad = (event: Event) => {
+            const image = event.currentTarget as HTMLImageElement
+            if (image.getAttribute('src') !== source.value) return
+            if (isUnavailableAvatar(source.value, image.naturalWidth, image.naturalHeight)) nextSource()
+            else loaded.value = true
         }
         watch(
             source,
@@ -54,7 +61,7 @@ export default defineComponent({
             },
             { immediate: true },
         )
-        return { source, loaded, nextSource }
+        return { source, nextSource, onLoad }
     },
 })
 </script>
