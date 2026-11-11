@@ -22,22 +22,11 @@
                     </div>
                 </div>
             </el-form-item>
-            <el-form-item label="错误报告和统计">
-                <div class="form-content">
-                    <div class="select">
-                        <el-switch v-model="options.reporting"></el-switch>
-                    </div>
-                    <div class="desc">关闭后刷新页面生效。</div>
-                </div>
-            </el-form-item>
         </el-form>
         <h4>关于</h4>
         <section class="about">
             <div class="logo"><icon-cocogoat /> 椰羊 cocogoat</div>
             <div class="copyright">&copy;2022-2024 YuehaiTeam <build-info /></div>
-            <div v-if="options.reporting" class="logreport">
-                <el-link @click="report">上传日志</el-link>
-            </div>
         </section>
     </section>
 </template>
@@ -56,15 +45,10 @@ export default {
         BuildInfo,
     },
     setup() {
-        const report = async () => {
-            const reporting = await import('@/utils/reporting')
-            reporting.report()
-        }
         return {
             isMobile: toRef(bus(), 'isMobile'),
             langNames,
             options,
-            report,
             configuredMode,
         }
     },

@@ -43,10 +43,6 @@ declare global {
 
 ;(async () => {
     await initi18n()
-    if (options.value.reporting && process.env.NODE_ENV === 'production' && process.env.VUE_APP_TEST !== 'true') {
-        const { init } = await import('@/utils/reporting')
-        init(app, router)
-    }
     app.component('FaIcon', FontAwesomeIcon).component('Layout', View).use(router).mount('#toki')
     if (top === window && !location.href.includes('/frames')) {
         // Don't sync in iframes

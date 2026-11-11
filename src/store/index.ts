@@ -25,7 +25,7 @@ export function createEmptyOptions() {
         lang: navigator.language.toLowerCase(),
         achievements_recent_export: 'excel',
         achievements_show_unpublished: false,
-        reporting: true,
+        reporting: false,
     }
 }
 export type IOptions = ReturnType<typeof createEmptyOptions>

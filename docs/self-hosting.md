@@ -1,6 +1,6 @@
 # 自有服务器部署
 
-网页与同步接口打包在同一个容器中，使用 Docker Compose 启动，不需要数据库。原椰羊账号、OneDrive、第三方验证码和同步接口已移除；未登录时仍可在本机使用成就功能。
+网页与同步接口打包在同一个容器中，使用 Docker Compose 启动，不需要数据库。原椰羊账号、OneDrive、第三方验证码、同步接口以及原站统计和日志上传入口已移除；未登录时仍可在本机使用成就功能。
 
 ## 首次启动
 
@@ -105,7 +105,25 @@ git submodule update --init --recursive
 docker compose up -d --build
 ```
 
-升级会保留命名卷。不要使用 `docker compose down -v`，该选项会删除数据卷。Compose 的卷保留行为可参阅 [Docker 官方说明](https://docs.docker.com/reference/cli/docker/compose/up/)。线上实例使用构建时锁定的成就数据；仓库自动更新后，需要在服务器执行上述升级步骤才会加载新数据。
+升级会保留命名卷。不要使用 `docker compose down -v`，该选项会删除数据卷。Compose 的卷保留行为可参阅 [Docker 官方说明](https://docs.docker.com/reference/cli/docker/compose/up/)。线上实例使用构建时锁定的成就数据；可以手动升级，也可以配置下方自动更新。
+
+## 服务器自动更新
+
+Linux 服务器可使用自带的 `scripts/update-selfhost.sh`。该脚本需要 Git、Docker Compose、`flock`，以及执行用户访问 Docker 的权限。每次检查仓库新提交，有变化时同步锁定的子模块并重建容器，保留数据卷；存在本地代码修改时停止，防止覆盖你的改动。构建失败时旧容器继续运行。
+
+例如项目位于 `/opt/cocogoat`，先创建日志目录：
+
+```sh
+mkdir -p /opt/cocogoat/.cache
+```
+
+在部署用户的 `crontab -e` 中添加：
+
+```cron
+47 * * * * /bin/sh /opt/cocogoat/scripts/update-selfhost.sh >> /opt/cocogoat/.cache/selfhost-update.log 2>&1
+```
+
+将路径替换成实际目录。脚本检测到 `.env.selfhost` 时会使用该文件并启用内置 HTTPS；使用自己的反向代理时不需要这个文件，也可以在常规 `.env` 中配置 Compose 变量。最初的构建与创建账号仍按前文完成，之后无需逐版本操作；更新取决于上游正式版数据和仓库自动发布是否成功。
 
 ## 验证
 

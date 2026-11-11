@@ -32,6 +32,9 @@ const useSentry = false
 // !process.argv.includes('--no-sentry') && process.env.NODE_ENV === 'production' && !!process.env.SENTRY_KEY
 process.env.VUE_APP_BUILD = require('dayjs')().format('YYMMDDHHmm')
 process.env.VUE_APP_ROUTER_HASH = singleFile || process.env.FORK_DEPLOY === 'true' ? 'true' : 'false'
+if (process.env.FORK_DEPLOY === 'true') {
+    process.env.VUE_APP_SWENTRANCE = process.env.VUE_APP_PUBLIC_PATH || '/'
+}
 process.env.VUE_APP_SINGLEFILE = singleFile ? 'true' : 'false'
 process.env.VUE_APP_LOCALRES = singleFile || process.env.NODE_ENV === 'development' ? 'true' : 'false'
 process.env.VUE_APP_TIMESTAMP = Date.now()

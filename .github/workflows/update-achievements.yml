@@ -116,7 +116,9 @@ jobs:
               with:
                   node-version: 22
             - name: Build and verify self-hosted Compose deployment
-              run: node scripts/test-container.mjs
+              run: |
+                  sh -n scripts/update-selfhost.sh
+                  node scripts/test-container.mjs
     deploy:
         needs: [update, container]
         if: needs.update.outputs.publish == 'true'
