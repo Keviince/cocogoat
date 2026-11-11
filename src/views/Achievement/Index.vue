@@ -106,6 +106,13 @@
                     }"
                 ></div>
             </div>
+            <achievement-sidebar
+                :totalFin="totalFin"
+                :achievementCat="allAchievementCat"
+                :achievementFinStat="achievementFinStat"
+                :hideFinished="hideFinished"
+                :currentCat="currentCatId"
+            />
             <article>
                 <DynamicScroller
                     ref="scroll"
@@ -119,26 +126,6 @@
                     <template #before>
                         <div class="page-before">
                             <div class="left">
-                                <el-select
-                                    v-model="currentCatId"
-                                    class="category-select"
-                                    filterable
-                                    aria-label="成就分类"
-                                >
-                                    <el-option
-                                        v-for="category in allAchievementCat"
-                                        :key="category.key"
-                                        :value="category.key"
-                                        :label="category.key === 'all' ? '所有成就' : amos[category.name]"
-                                    >
-                                        {{ category.key === 'all' ? '所有成就' : amos[category.name] }}
-                                        ({{
-                                            category.key === 'all'
-                                                ? totalFin.count
-                                                : achievementFinStat[category.id]?.count || 0
-                                        }}/{{ category.achievements.length }})
-                                    </el-option>
-                                </el-select>
                                 <el-select
                                     v-model="statusVersion"
                                     class="status-version"
@@ -306,6 +293,7 @@ import { DynamicScroller, DynamicScrollerItem } from 'vue-virtual-scroller/src/i
 import { useContributedAchievements } from './useContributedAchievements'
 
 import AchievementItemComp from './AchivementItem.vue'
+import AchievementSidebar from './AchievementSidebar.vue'
 import AchievementDetail from './AchievementDetail.vue'
 import ExportDropdown from './ExportDropdown.vue'
 import ImportDialog from './ImportDialog.vue'
@@ -323,6 +311,7 @@ export default defineComponent({
     components: {
         IconCocogoat,
         AchievementItem: AchievementItemComp,
+        AchievementSidebar,
         AchievementDetail,
         ImportDialog,
         ExportDropdown,
@@ -472,12 +461,7 @@ export default defineComponent({
         const route = useRoute()
         const DEFAULTCAT = 'wonders-of-the-world'
         const ALLCAT = 'all'
-        const currentCatId = computed({
-            get: () => (route.params.cat as string) || ALLCAT,
-            set: (cat: string) => {
-                router.replace({ name: 'achievement.index', params: { cat }, query: route.query })
-            },
-        })
+        const currentCatId = computed(() => (route.params.cat as string) || ALLCAT)
         const currentCat = computed(() => {
             const v: AchievementCategory =
                 allAchievementCat.value.find((i) => i.key === currentCatId.value) || allAchievementCat.value[0]
@@ -791,7 +775,6 @@ export default defineComponent({
             achievementCat,
             allAchievementCat,
             currentCatId,
-            amos: toRef(i18n, 'amos'),
             currentCat,
             achievementFin,
             achievementFinStat,
@@ -895,7 +878,7 @@ export default defineComponent({
             height: 3px;
             position: absolute;
             top: 0;
-            left: 0;
+            left: 235px;
             right: 0;
             z-index: 99;
             .progress-in {
@@ -905,7 +888,7 @@ export default defineComponent({
             }
         }
         article {
-            left: 0;
+            left: 235px;
             position: absolute;
             top: 0;
             bottom: 0;
@@ -944,11 +927,6 @@ export default defineComponent({
                             flex: 2;
                         }
                         flex: 3;
-                        &.category-select {
-                            min-width: 220px;
-                            width: 260px;
-                            max-width: 320px;
-                        }
                         .el-tag.is-closable {
                             padding-left: 5px;
                         }
@@ -1030,7 +1008,7 @@ export default defineComponent({
             }
         }
         article {
-            top: 0;
+            top: 70px;
             left: 0;
         }
 
